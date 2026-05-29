@@ -842,30 +842,35 @@ function RulerSlider({
 }) {
   const TICK_PX = 10;
   const dragRef = useRef<HTMLDivElement | null>(null);
+  const dragState = useRef<{ startX: number; startValue: number } | null>(null);
+
   const ticks = useMemo(() => {
     const arr: number[] = [];
     for (let i = min; i <= max; i++) arr.push(i);
     return arr;
   }, [min, max]);
+
   const offset = (min - value) * TICK_PX;
   const clamp = (nextValue: number) => Math.min(max, Math.max(min, nextValue));
-  const updateFromClientX = (clientX: number) => {
-    const rect = dragRef.current?.getBoundingClientRect();
-    if (!rect || rect.width === 0) return;
 
-    const ratio = (clientX - rect.left) / rect.width;
-    const nextValue = clamp(Math.round(min + ratio * (max - min)));
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragState.current = { startX: event.clientX, startValue: value };
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    if (event.buttons !== 1 || !dragState.current) return;
+    const deltaX = event.clientX - dragState.current.startX;
+    const nextValue = clamp(Math.round(dragState.current.startValue - (deltaX / TICK_PX)));
     onChange(nextValue);
   };
-  const handlePointerDown = (event: PointerEvent<HTMLDivElement>) => {
-    event.currentTarget.setPointerCapture(event.pointerId);
-    updateFromClientX(event.clientX);
+
+  const handlePointerUp = (event: React.PointerEvent<HTMLDivElement>) => {
+    event.currentTarget.releasePointerCapture(event.pointerId);
+    dragState.current = null;
   };
-  const handlePointerMove = (event: PointerEvent<HTMLDivElement>) => {
-    if (event.buttons !== 1) return;
-    updateFromClientX(event.clientX);
-  };
-  const handleKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
     if (event.key === "ArrowRight") {
       event.preventDefault();
       onChange(clamp(value + 1));
@@ -925,8 +930,10 @@ function RulerSlider({
           aria-valuenow={value}
           onPointerDown={handlePointerDown}
           onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
           onKeyDown={handleKeyDown}
-          className="absolute inset-0 cursor-ew-resize outline-none"
+          className="absolute inset-0 cursor-ew-resize outline-none touch-none"
         />
       </div>
       <p className="mt-1 text-center text-xs text-muted-foreground/70">
