@@ -103,15 +103,15 @@ function RootShell({ children }: { children: React.ReactNode }) {
     <html lang="en">
       <head>
         <HeadContent />
-      </head>
-      <body>
-        {children}
-        <Scripts />
         <script
           src="https://cdn.utmify.com.br/scripts/utms/latest.js"
           async
           defer
         ></script>
+      </head>
+      <body>
+        {children}
+        <Scripts />
       </body>
     </html>
   );
