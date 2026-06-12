@@ -1114,11 +1114,9 @@ function StepAgeInput({
 }
 
 function StepFinal({ answers: _answers }: { answers: Record<string, unknown> }) {
-  const REVEAL_AFTER = 330; // 5min 30s
   const COUNTDOWN_SECS = 8 * 60; // 08:00
 
-  const [unlocked, setUnlocked] = useState(false);
-  const [waitLeft, setWaitLeft] = useState(REVEAL_AFTER);
+  const [unlocked, setUnlocked] = useState(true);
   const [offerLeft, setOfferLeft] = useState(COUNTDOWN_SECS);
   const [openFaq, setOpenFaq] = useState<number | null>(null);
 
@@ -1126,20 +1124,6 @@ function StepFinal({ answers: _answers }: { answers: Record<string, unknown> }) 
   const today = useMemo(() => {
     const d = new Date();
     return `${String(d.getDate()).padStart(2, "0")}/${String(d.getMonth() + 1).padStart(2, "0")}/${d.getFullYear()}`;
-  }, []);
-
-  useEffect(() => {
-    // Hidden timer to unlock content after REVEAL_AFTER seconds
-    const start = Date.now();
-    const t = setInterval(() => {
-      const elapsed = Math.floor((Date.now() - start) / 1000);
-      if (elapsed >= REVEAL_AFTER) {
-        setUnlocked(true);
-        clearInterval(t);
-      }
-      setWaitLeft(Math.max(0, REVEAL_AFTER - elapsed));
-    }, 1000);
-    return () => clearInterval(t);
   }, []);
 
   useEffect(() => {
